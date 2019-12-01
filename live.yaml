@@ -1,0 +1,17 @@
+type: live
+
+size: 5 GiB
+
+osname: lirios
+remote-url: https://repo.liri.io/ostree/repo
+main-ref: lirios/unstable/${basearch}/live
+refs:
+  - lirios/unstable/${basearch}/desktop
+  - lirios/unstable/${basearch}/live
+
+extra-kargs:
+  - rhgb
+
+live:
+  title: 'Liri OS'
+  product: 'Liri OS (Live)'

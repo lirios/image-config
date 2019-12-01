@@ -1,0 +1,9 @@
+type: disk
+size: 5 GiB
+
+osname: lirios
+remote-url: https://repo.liri.io/ostree/repo
+main-ref: lirios/unstable/${basearch}/desktop
+
+extra-kargs:
+  - rhgb
