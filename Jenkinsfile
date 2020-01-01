@@ -32,7 +32,7 @@ pipeline {
           workDir = "${JENKINS_HOME}/workspace/ostree-artifacts/work"
           repoPath = "${JENKINS_HOME}/workspace/ostree-artifacts/repo-dev"
         }
-        sh label: 'Create image', script: "sudo oic --manifest=${params.type}.yaml --output=${isoFileName} --workdir=${workDir} --repo=${repoPath}"
+        sh label: 'Create image', script: "sudo RUST_BACKTRACE=1 RUST_LOG=trace oic --manifest=${params.type}.yaml --output=${isoFileName} --workdir=${workDir} --repo=${repoPath}"
         withCredentials([file(credentialsId: 'ci-pgp-passphrase', variable: 'FILE')]) {
           sh label: 'Checksum', script: "sha256sum -b --tag ${isoFileName} | gpg --clearsign --pinentry-mode=loopback --passphrase-file=${FILE} --no-tty --batch --yes > ${checksumFileName}"
         }
