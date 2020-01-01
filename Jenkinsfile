@@ -5,7 +5,7 @@ pipeline {
   agent {
     docker {
       image "liriorg/ostree-image-creator"
-      args "--privileged -v ${JENKINS_HOME}:${JENKINS_HOME} --tmpfs /tmp -v /var/tmp:/var/tmp"
+      args "--privileged -v ${JENKINS_HOME}:${JENKINS_HOME} --tmpfs /tmp -v /var/tmp:/var/tmp --device /dev/fuse"
       alwaysPull true
     }
   }
