@@ -15,7 +15,7 @@ pipeline {
   stages {
     stage('Prepare') {
       steps {
-        sh 'sudo dnf install -y git gnupg2 pinentry libselinux-utils selinux-policy selinux-policy-targeted policycoreutils'
+        sh 'sudo dnf install -y gnupg2 pinentry'
         withCredentials([file(credentialsId: 'ci-pgp-key', variable: 'FILE')]) {
           sh label: 'Import PGP key', script: "gpg --import --no-tty --batch --yes ${FILE}"
         }
