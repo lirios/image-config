@@ -10,7 +10,7 @@ refs:
   - lirios/unstable/${basearch}/live
 
 extra-kargs:
-  - rhgb
+  - splash
 
 live:
   title: 'Liri OS'
