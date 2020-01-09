@@ -17,7 +17,7 @@ pipeline {
       steps {
         sh """
 sudo dnf install -y dnf-plugins-core gnupg2 pinentry python3-requests python3-requests-toolbelt
-sudo dnf copr enable plfiorini/liri-tools
+sudo dnf copr enable -y plfiorini/liri-tools
 sudo dnf install -y ostree-image-creator
 """
         withCredentials([file(credentialsId: 'ci-pgp-key', variable: 'FILE')]) {
