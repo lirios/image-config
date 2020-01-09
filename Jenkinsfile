@@ -4,7 +4,7 @@ pipeline {
   }
   agent {
     docker {
-      image "liriorg/ostree-image-creator"
+      image "liridev/ci-fedora-jenkins:31"
       args "--privileged -v ${JENKINS_HOME}:${JENKINS_HOME} --tmpfs /tmp -v /var/tmp:/var/tmp --device /dev/fuse"
       alwaysPull true
     }
@@ -15,7 +15,11 @@ pipeline {
   stages {
     stage('Prepare') {
       steps {
-        sh 'sudo dnf install -y gnupg2 pinentry'
+        sh """
+sudo dnf install -y dnf-plugins-core gnupg2 pinentry python3-requests python3-requests-toolbelt
+sudo dnf copr enable plfiorini/liri-tools
+sudo dnf install -y ostree-image-creator
+"""
         withCredentials([file(credentialsId: 'ci-pgp-key', variable: 'FILE')]) {
           sh label: 'Import PGP key', script: "gpg --import --no-tty --batch --yes ${FILE}"
         }
@@ -43,7 +47,6 @@ cat ${checksumFileName}.orig | gpg --clearsign --pinentry-mode=loopback --passph
     }
     stage('Publish') {
       steps {
-        sh "sudo dnf install -y python3-requests python3-requests-toolbelt"
         sh "curl -O https://raw.githubusercontent.com/liri-infra/image-manager/develop/image-manager-client && chmod 755 image-manager-client"
         script {
           token = sh(returnStdout: true, script: "echo ${env.IMAGE_MANAGER_CREDENTIALS_PSW} | ./image-manager-client create-token --api-url=${env.IMAGE_MANAGER_URL} ${env.IMAGE_MANAGER_CREDENTIALS_USR}").trim()
