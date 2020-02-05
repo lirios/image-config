@@ -16,3 +16,4 @@ extra-kargs:
 live:
   title: 'Liri OS'
   product: 'Liri OS (Live)'
+  compression-args: -b 1M -no-recovery -comp zstd -Xcompression-level 10
