@@ -12,6 +12,8 @@ refs:
 extra-kargs:
   - splash
   - quiet
+  - selinux=0
+  - enforcing=0
 
 live:
   title: 'Liri OS'
