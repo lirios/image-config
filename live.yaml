@@ -1,6 +1,6 @@
 type: live
 
-size: 5 GiB
+size: 6 GiB
 
 osname: lirios
 remote-url: https://repo.liri.io/ostree/repo
