@@ -1,21 +1,128 @@
-type: live
+# SPDX-FileCopyrightText: 2020 Pier Luigi Fiorini <pierluigi.fiorini@gmail.com>
+#
+# SPDX-License-Identifier: CC0-1.0
 
-size: 6 GiB
+#
+# Liri OS live image
+#
 
-osname: lirios
-remote-url: https://repo.liri.io/ostree/repo
-main-ref: lirios/unstable/${basearch}/live
-refs:
-  - lirios/unstable/${basearch}/desktop
-  - lirios/unstable/${basearch}/live
+variables:
+  kernelArguments:
+    - splash
+    - quiet
+    - selinux=0
+    - enforcing=0
+    - rd.live.image
+    - oic.live.label=lirios-{{.today}}-{{.architecture}}
 
-extra-kargs:
-  - splash
-  - quiet
-  - selinux=0
-  - enforcing=0
+actions:
+  # Deploy the OS tree
+  - action: ostree-deploy
+    name: Deploy the OS tree
+    path: rootfs
+    url: https://repo.liri.io/ostree/repo
+    no-gpg-verify: true
+    osname: lirios
+    branch: lirios/unstable/{{.architecture}}/live
 
-live:
-  title: 'Liri OS'
-  product: 'Liri OS (Live)'
-  compression-args: -b 1M -no-recovery -comp zstd -Xcompression-level 10
+  # Extract kernel and initramfs
+  - action: ostree-checkout
+    name: Extract kernel and initramfs
+    repository: rootfs/ostree/repo
+    branch: lirios/unstable/{{.architecture}}/live
+    from: /usr/lib/modules
+    to: iso/images
+    files:
+      - glob: vmlinuz
+      - glob: initramfs.img
+
+  # Extract memtest
+  - action: ostree-checkout
+    name: Extract memtest
+    repository: rootfs/ostree/repo
+    branch: lirios/unstable/{{.architecture}}/live
+    from: /usr/lib/ostree-boot
+    to: iso/images
+    files:
+      - glob: memtest86+*
+
+  # Pull the branch that is going to be installed by the users
+  - action: ostree-pull
+    name: Pull the OS tree that will be installed
+    repository: rootfs/ostree/repo
+    url: https://repo.liri.io/ostree/repo
+    no-gpg-verify: true
+    osname: lirios
+    branches:
+      - lirios/unstable/{{.architecture}}/desktop
+
+  # Create squashfs
+  - action: run
+    name: Create squashfs
+    working-directory: rootfs
+    command: |
+      mkdir -p ../iso/LiveOS
+      mksquashfs . ../iso/LiveOS/squashfs.img -b 1M -no-recovery \
+        -comp zstd -Xcompression-level 10
+
+  # Copy files
+  - action: copy
+    name: Copy files to ISO
+    from: live
+    to: iso/isolinux
+    exclude:
+      - README-devel.md
+
+  # isolinux file
+  - action: template
+    name: Create isolinux configuration
+    template: templates/syslinux.cfg
+    path: iso/isolinux/isolinux.cfg
+    variables:
+      title: Liri OS
+      product: Liri OS (Live)
+      timeout: 600
+
+  # grub file
+  - action: template
+    name: Create GRUB configuration
+    template: templates/grub.cfg
+    path: iso/EFI/fedora/grub.cfg
+    variables:
+      title: Liri OS
+      product: Liri OS (Live)
+      timeout: 60
+
+  # Extract syslinux files
+  - action: ostree-checkout
+    name: Extract syslinux files
+    repository: rootfs/ostree/repo
+    branch: lirios/unstable/{{.architecture}}/live
+    from: /usr/share/syslinux
+    to: iso/isolinux
+    files:
+      - glob: isolinux.bin
+      - glob: ldlinux.c32
+      - glob: libcom32.c32
+      - glob: libutil.c32
+      - glob: vesamenu.c32
+
+  # Create efiboot.img
+  - action: efiboot
+    name: Create image with EFI files for UEFI booting
+    repository: rootfs/ostree/repo
+    branch: lirios/unstable/{{.architecture}}/live
+    path: iso/images/efiboot.img
+
+  # Create ISO image
+  - action: mkiso
+    name: Create ISO image
+    label: lirios-{{.today}}-{{.architecture}}
+    volume: lirios-{{.today}}-{{.architecture}}
+    path: iso
+    isolinux: true
+    efiboot: true
+    implantisomd5: true
+    artifacts:
+      iso: lirios-{{.today}}-{{.architecture}}.iso
+      checksum: lirios-{{.today}}-{{.architecture}}-CHECKSUM
