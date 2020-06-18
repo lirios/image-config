@@ -1,10 +1,14 @@
+# SPDX-FileCopyrightText: 2020 Pier Luigi Fiorini <pierluigi.fiorini@gmail.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+kernelArguments:
+  - splash
+  - quiet
+
 type: disk
 size: 5 GiB
 
 osname: lirios
 remote-url: https://repo.liri.io/ostree/repo
 main-ref: lirios/unstable/${basearch}/desktop
-
-extra-kargs:
-  - splash
-  - quiet
