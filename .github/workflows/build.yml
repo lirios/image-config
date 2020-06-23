@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  repository_dispatch:
+    types:
+      - rebuild
+
+jobs:
+  build-x86_64:
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    container:
+      image: fedora:latest
+      options: --privileged
+    strategy:
+      matrix:
+        recipe:
+          - live.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          set -x
+          dnf install -y dnf-plugins-core
+          dnf copr enable -y plfiorini/liri-tools
+          dnf install -y ostree-image-creator image-manager selinux-policy selinux-policy-targeted policycoreutils
+      - name: Build
+        run: |
+          # Workspace in the current directory because it's a EXT4 file system
+          # that supports the `chattr -i` command
+          oic build ${{ matrix.recipe }} -o $(pwd) -w workspace/
+          ls -al *.iso *-CHECKSUM
+          test -f *.iso
+          test -f *-CHECKSUM
+      - name: Upload
+        env:
+            IMAGE_MANAGER_TOKEN: ${{ secrets.IMAGE_MANAGER_TOKEN }}
+        run: |
+          set -x
+          image-manager client \
+            --address=${{ secrets.IMAGE_MANAGER_URL }} \
+            --channel=unstable \
+            --iso=$(ls *.iso) \
+            --checksum=$(ls *-CHECKSUM)
