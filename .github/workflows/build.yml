@@ -53,8 +53,10 @@ jobs:
             IMAGE_MANAGER_TOKEN: ${{ secrets.IMAGE_MANAGER_TOKEN }}
         run: |
           set -x
-          image-manager client \
-            --address=${{ secrets.IMAGE_MANAGER_URL }} \
-            --channel=unstable \
-            --iso=$(ls *.iso) \
-            --checksum=$(ls *-CHECKSUM)
+          for attempt in `seq 1 5`; do
+              image-manager client \
+                --address=${{ secrets.IMAGE_MANAGER_URL }} \
+                --channel=unstable \
+                --iso=$(ls *.iso) \
+                --checksum=$(ls *-CHECKSUM) && break || sleep 5
+          done
